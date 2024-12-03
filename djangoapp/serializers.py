@@ -17,7 +17,10 @@ class SubjectSerializer(serializers.ModelSerializer):
         # Return the student's name (assuming the student relationship is defined)
         return obj.student.name
         
-# class MarksSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Student
-#         fields = '__all__'
+class MarksSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.name', read_only=True)
+    subject_name = serializers.CharField(source='subject.subject', read_only=True)
+
+    class Meta:
+        model = Marks
+        fields = ['id', 'student_name', 'subject_name', 'marks']

@@ -14,9 +14,9 @@ urlpatterns = [
     path('update-subject/<str:pk>/', views.update_subject),
     path('delete-subject/<str:pk>/', views.delete_subject),
     
-    # path('marks/', views.get_marks),
-    # path('mark/<str:pk>/', views.get_mark),
-    # path('add-mark/', views.add_mark),
-    # path('update-mark/<str:pk>/', views.update_mark),
-    # path('delete-mark/<str:pk>/', views.delete_mark),
+    path('marks/', views.get_marks),
+    path('mark/<str:pk>/', views.get_mark),
+    path('add-mark/', views.add_mark),
+    path('update-mark/<str:pk>/', views.update_mark),
+    path('delete-mark/<str:pk>/', views.delete_mark),
 ]

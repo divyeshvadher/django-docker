@@ -153,41 +153,123 @@ def delete_subject(request, pk):
         # Catch other exceptions and return error
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# # Marks Views
-# @api_view(['GET'])
-# def get_marks(request):
-#     marks = Marks.objects.all()
-#     serializer = MarksSerializer(marks, many=True)
-#     return Response(serializer.data)
+# Marks Views
 
-# @api_view(['GET'])
-# def get_mark(request, pk):
-#     mark = Marks.objects.get(id=pk)
-#     serializer = MarksSerializer(mark, many=False)
-#     return Response(serializer.data)
+@api_view(['GET'])
+def get_marks(request):
+    try:
+        student_id = request.query_params.get('student_id')
+        subject_name = request.query_params.get('subject_name')
+        
+        if student_id and subject_name:
+            # Filter by student_id and subject_name
+            marks = Marks.objects.filter(student__id=student_id, subject__subject=subject_name)
+        elif student_id:
+            # Filter by student_id
+            marks = Marks.objects.filter(student__id=student_id)
+        elif subject_name:
+            # Filter by subject_name
+            marks = Marks.objects.filter(subject__subject=subject_name)
+        else:
+            # If neither student_id nor subject_name is provided, get all marks
+            marks = Marks.objects.all()
 
-# @api_view(['POST'])
-# def add_mark(request):
-#     serializer = MarksSerializer(data=request.data)
+        serializer = MarksSerializer(marks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
-#     if serializer.is_valid():
-#         serializer.save()
-    
-#     return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# @api_view(['PUT'])  
-# def update_mark(request, pk):
-#     mark = Marks.objects.get(id=pk)
-#     serializer = MarksSerializer(instance=mark, data=request.data)
-    
-#     if serializer.is_valid():
-#         serializer.save()
-    
-#     return Response(serializer.data)
+@api_view(['GET'])
+def get_mark(request, pk):
+    try:
+        # Get the mark by id (primary key)
+        mark = Marks.objects.get(id=pk)
 
-# @api_view(['DELETE'])
-# def delete_mark(request, pk):
-#     mark = Marks.objects.get(id=pk)
-#     mark.delete()
+        # If you want to check if the student is the correct one:
+        student_id = request.query_params.get('student_id')
+        if student_id and mark.student.id != int(student_id):
+            return Response({'error': 'Mark not found for this student.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Return the mark details
+        serializer = MarksSerializer(mark, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
-#     return Response('Mark deleted successfully')
+    except Marks.DoesNotExist:
+        return Response({'error': 'Mark not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def add_mark(request):
+    try:
+        student_name = request.data.get('student_name')
+        subject_name = request.data.get('subject_name')
+        marks_value = request.data.get('marks')
+
+        if not student_name or not subject_name or marks_value is None:
+            return Response({'error': 'Student name, subject name, and marks are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the student and subject objects
+        student = Student.objects.get(name=student_name)
+        subject = Subject.objects.get(subject=subject_name)
+        
+        # Create the marks entry
+        marks = Marks.objects.create(student=student, subject=subject, marks=marks_value)
+        marks.save()
+
+        # Serialize the created marks object
+        serializer = MarksSerializer(marks)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    except Student.DoesNotExist:
+        return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Subject.DoesNotExist:
+        return Response({'error': 'Subject not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+def update_mark(request, pk):
+    try:
+        mark = Marks.objects.get(id=pk)
+
+        # Optional: Validate student_id to ensure it's the correct student
+        student_id = request.data.get('student_id')
+        if student_id and mark.student.id != int(student_id):
+            return Response({'error': 'Mark does not belong to the specified student.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Serialize the data and update the mark
+        serializer = MarksSerializer(instance=mark, data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Marks.DoesNotExist:
+        return Response({'error': 'Mark not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_mark(request, pk):
+    try:
+        mark = Marks.objects.get(id=pk)
+
+        # Optional: Validate student_id to ensure it's the correct student
+        student_id = request.query_params.get('student_id')
+        if student_id and mark.student.id != int(student_id):
+            return Response({'error': 'Mark does not belong to the specified student.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Delete the mark
+        mark.delete()
+        return Response({'message': 'Mark deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+    except Marks.DoesNotExist:
+        return Response({'error': 'Mark not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -17,10 +17,10 @@ class Subject(models.Model):
     def __str__(self):
         return self.subject
     
-# class Marks(models.Model):
-#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='marks')
-#     marks = models.FloatField()
+class Marks(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='marks')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='marks')
+    marks = models.FloatField()
 
-#     def __str__(self):
-#         return self.subject.name
+    def __str__(self):
+        return f"{self.student.name} - {self.subject.subject} - {self.marks}"
