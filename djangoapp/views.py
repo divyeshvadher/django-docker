@@ -203,17 +203,17 @@ def get_mark(request, pk):
 @api_view(['POST'])
 def add_mark(request):
     try:
-        student_name = request.data.get('student_name')
+        roll_number = request.data.get('roll_number')
         subject_name = request.data.get('subject_name')
         marks_value = request.data.get('marks')
 
-        if not student_name or not subject_name or marks_value is None:
-            return Response({'error': 'Student name, subject name, and marks are required.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        if not roll_number or not subject_name or marks_value is None:
+            return Response({'error': 'Roll number, subject name, and marks are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Get the student and subject objects
-        student = Student.objects.get(name=student_name)
-        subject = Subject.objects.get(subject=subject_name)
-        
+        student = Student.objects.get(roll=roll_number)
+        subject = Subject.objects.get(subject=subject_name, student=student)
+
         # Create the marks entry
         marks = Marks.objects.create(student=student, subject=subject, marks=marks_value)
         marks.save()
@@ -222,14 +222,13 @@ def add_mark(request):
         serializer = MarksSerializer(marks)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     except Student.DoesNotExist:
-        return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Student with the given roll number not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Subject.DoesNotExist:
-        return Response({'error': 'Subject not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Subject not found for the given student.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['PUT'])
 def update_mark(request, pk):
