@@ -72,11 +72,22 @@ def get_subjects(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# @api_view(['GET'])
-# def get_subject(request, pk):
-#     subject = Subject.objects.get(id=pk)
-#     serializer = SubjectSerializer(subject, many=False)
-#     return Response(serializer.data)
+@api_view(['GET'])
+def get_subject(request, pk):
+    try:
+        # Retrieve the specific subject by its ID (primary key)
+        subject = Subject.objects.get(id=pk)
+        
+        # Serialize the subject using the SubjectSerializer
+        serializer = SubjectSerializer(subject, many=False)
+        
+        # Return the serialized data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except Subject.DoesNotExist:
+        return Response({'error': 'Subject not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def add_subject(request):
@@ -101,22 +112,46 @@ def add_subject(request):
         print("Error:", str(e))  # Debugging
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# @api_view(['PUT'])
-# def update_subject(request, pk):
-#     subject = Subject.objects.get(id=pk)
-#     serializer = SubjectSerializer(instance=subject, data=request.data)
-    
-#     if serializer.is_valid():
-#         serializer.save()
-    
-#     return Response(serializer.data)
+@api_view(['PUT'])
+def update_subject(request, pk):
+    try:
+        # Retrieve the subject by its ID (primary key)
+        subject = Subject.objects.get(id=pk)
 
-# @api_view(['DELETE'])
-# def delete_subject(request, pk):
-#     subject = Subject.objects.get(id=pk)
-#     subject.delete()
+        # Create a serializer instance with the existing subject and new data from the request
+        serializer = SubjectSerializer(instance=subject, data=request.data)
+        
+        # Check if the new data is valid
+        if serializer.is_valid():
+            # Save the updated subject
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-#     return Response('Subject deleted successfully')
+    except Subject.DoesNotExist:
+        return Response({'error': 'Subject not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_subject(request, pk):
+    try:
+        # Retrieve the subject by its ID (primary key)
+        subject = Subject.objects.get(id=pk)
+
+        # Delete the subject
+        subject.delete()
+        
+        # Return success response
+        return Response({'message': 'Subject deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+    
+    except Subject.DoesNotExist:
+        # Return error if subject not found
+        return Response({'error': 'Subject not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # Catch other exceptions and return error
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # # Marks Views
 # @api_view(['GET'])

@@ -9,10 +9,10 @@ urlpatterns = [
     path('delete/<str:pk>/', views.delete_student),
     
     path('subjects/', views.get_subjects),
-    # path('subject/<str:pk>/', views.get_subject),
+    path('subject/<str:pk>/', views.get_subject),
     path('add-subject/', views.add_subject),
-    # path('update-subject/<str:pk>/', views.update_subject),
-    # path('delete-subject/<str:pk>/', views.delete_subject),
+    path('update-subject/<str:pk>/', views.update_subject),
+    path('delete-subject/<str:pk>/', views.delete_subject),
     
     # path('marks/', views.get_marks),
     # path('mark/<str:pk>/', views.get_mark),
