@@ -1,10 +1,5 @@
 from rest_framework import serializers
 from .models import *
-
-class StudentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = '__all__'
         
 class SubjectSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
@@ -24,3 +19,17 @@ class MarksSerializer(serializers.ModelSerializer):
     class Meta:
         model = Marks
         fields = ['id', 'student_name', 'subject_name', 'marks']
+        
+class StudentSerializer(serializers.ModelSerializer):
+    flat_subjects = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
+        fields = ['name', 'age', 'roll', 'flat_subjects']
+
+    def get_flat_subjects(self, obj):
+        marks = Marks.objects.filter(student=obj)
+        flat_data = {}
+        for mark in marks:
+            flat_data[mark.subject.subject] = mark.marks
+        return flat_data

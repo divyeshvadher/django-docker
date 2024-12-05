@@ -10,16 +10,47 @@ from .serializers import *
 # get all students
 @api_view(['GET'])
 def get_students(request):
-    students = Student.objects.all()
-    serializer = StudentSerializer(students, many=True)
-    return Response(serializer.data)
+    try:
+        students = Student.objects.all()
+        response_data = []
+
+        for student in students:
+            marks = Marks.objects.filter(student=student)
+            data = {
+                "id": student.id,  
+                "name": student.name,
+                "age": student.age,
+                "roll": student.roll,
+            }
+            for mark in marks:
+                data[mark.subject.subject] = mark.marks  
+
+            response_data.append(data)
+
+        return Response(response_data, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
 
 # get single student
 @api_view(['GET'])
 def get_student(request, pk):
-    student = Student.objects.get(id=pk)
-    serializer = StudentSerializer(student, many=False)
-    return Response(serializer.data)
+    try:
+        student = Student.objects.get(id=pk)
+        marks = Marks.objects.filter(student=student)
+        data = {
+            "id": student.id,
+            "name": student.name,
+            "age": student.age,
+            "roll": student.roll
+        }
+        for mark in marks:
+            data[mark.subject.subject] = mark.marks
+
+        return Response(data, status=200)
+    except Student.DoesNotExist:
+        return Response({'error': 'Student not found.'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
 
 # add student
 @api_view(['POST'])
@@ -92,25 +123,43 @@ def get_subject(request, pk):
 @api_view(['POST'])
 def add_subject(request):
     try:
-        print("Request data:", request.data)  # Debugging
         student_id = request.data.get('student_id')
-        subject_name = request.data.get('subject')
-        if not student_id or not subject_name:
-            return Response({'error': 'Both student_id and subject are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        name = request.data.get('name')
 
-        student = Student.objects.get(id=student_id)
-        print("Student found:", student)  # Debugging
-        subject = Subject.objects.create(student=student, subject=subject_name)
-        subject.save()
+        if not student_id or not name:
+            return Response(
+                {"error": "Both student_id and subject_name are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        print("Subject created:", subject)  # Debugging
-        return Response({'message': 'Subject added successfully!'}, status=status.HTTP_201_CREATED)
-    except Student.DoesNotExist:
-        print("Student not found")  # Debugging
-        return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+        # Check if the student exists
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return Response(
+                {"error": "Student not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check if the subject already exists for the student
+        if Subject.objects.filter(student=student, subject=name).exists():
+            return Response(
+                {"error": "This subject already exists for the student."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create the subject
+        subject = Subject.objects.create(student=student, subject=name)
+
+        # Serialize the created subject
+        serializer = SubjectSerializer(subject)
+        return Response(
+            {"message": "Subject added successfully.", "subject": serializer.data},
+            status=status.HTTP_201_CREATED
+        )
+
     except Exception as e:
-        print("Error:", str(e))  # Debugging
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
 def update_subject(request, pk):
@@ -203,25 +252,35 @@ def get_mark(request, pk):
 @api_view(['POST'])
 def add_mark(request):
     try:
+        # Extract input data
         roll_number = request.data.get('roll_number')
         subject_name = request.data.get('subject_name')
         marks_value = request.data.get('marks')
 
         if not roll_number or not subject_name or marks_value is None:
             return Response({'error': 'Roll number, subject name, and marks are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Get the student and subject objects
+        
+        # Fetch the student using the roll number
         student = Student.objects.get(roll=roll_number)
-        subject = Subject.objects.get(subject=subject_name, student=student)
+        
+        # Check if the subject exists for this student
+        subject = Subject.objects.filter(student=student, subject=subject_name).first()
+        if not subject:
+            return Response({'error': 'Subject does not exist for this student.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the marks entry
+        # Check if marks for this subject already exist
+        if Marks.objects.filter(student=student, subject=subject).exists():
+            return Response({'error': 'Marks for this subject already exist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the mark entry
         marks = Marks.objects.create(student=student, subject=subject, marks=marks_value)
         marks.save()
 
-        # Serialize the created marks object
-        serializer = MarksSerializer(marks)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Marks added successfully!'}, status=status.HTTP_201_CREATED)
+    except Student.DoesNotExist:
+        return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     except Student.DoesNotExist:
         return Response({'error': 'Student with the given roll number not found.'}, status=status.HTTP_404_NOT_FOUND)
