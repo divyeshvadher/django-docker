@@ -10,26 +10,37 @@ from .serializers import *
 # get all students
 @api_view(['GET'])
 def get_students(request):
-    try:
-        students = Student.objects.all()
-        response_data = []
+    students = Student.objects.all()
 
-        for student in students:
-            marks = Marks.objects.filter(student=student)
-            data = {
-                "id": student.id,  
-                "name": student.name,
-                "age": student.age,
-                "roll": student.roll,
-            }
-            for mark in marks:
-                data[mark.subject.subject] = mark.marks  
+    # Build a response including subjects and marks for each student
+    data = []
+    for student in students:
+        # Fetch all subjects related to the student
+        subjects = Subject.objects.filter(student=student)
+        subjects_data = []
 
-            response_data.append(data)
+        for subject in subjects:
+            # Fetch marks for the subject
+            try:
+                marks = Marks.objects.get(student=student, subject=subject).marks
+            except Marks.DoesNotExist:
+                marks = 0  # Default to 0 if marks do not exist
 
-        return Response(response_data, status=200)
-    except Exception as e:
-        return Response({'error': str(e)}, status=400)
+            # Append subject and marks
+            subjects_data.append({subject.subject: marks})
+
+        # Combine student and subject information
+        student_data = {
+            "id": student.id,
+            "name": student.name,
+            "age": student.age,
+            "roll": student.roll,
+            "subjects": subjects_data,  # Include subjects and marks here
+        }
+        data.append(student_data)
+
+    return Response(data, status=200)
+
 
 # get single student
 @api_view(['GET'])
