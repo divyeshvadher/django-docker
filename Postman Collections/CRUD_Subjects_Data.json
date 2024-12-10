@@ -45,13 +45,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/subject/12",
+					"raw": "{{base_url}}/subject/18",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"subject",
-						"12"
+						"18"
 					]
 				}
 			},
@@ -79,7 +79,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"student_id\": 4,\n\t\"name\": \"Maths\"\n}",
+					"raw": "{\n    \"student_id\": 7,\n\t\"name\": \"Maths\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -130,13 +130,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/update-subject/13/",
+					"raw": "{{base_url}}/update-subject/18/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"update-subject",
-						"13",
+						"18",
 						""
 					]
 				},
@@ -174,13 +174,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/delete-subject/9/",
+					"raw": "{{base_url}}/delete-subject/18/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"delete-subject",
-						"9",
+						"18",
 						""
 					]
 				},

@@ -29,7 +29,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"name\": \"Chirag\",\n    \"age\": \"21\",\n    \"roll\": 90\n}",
+					"raw": "{\n    \"name\": \"Dev\",\n    \"age\": 20,\n    \"roll\": 257,\n    \"password\": \"DIvy@1010\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -122,7 +122,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": 5,\n    \"name\": \"Chirag\",\n    \"age\": 21,\n    \"roll\": 45\n}   ",
+					"raw": "{\n    \"id\": 7,\n    \"name\": \"Divyesh\",\n    \"age\": 20,\n    \"roll\": 136\n}   ",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -130,13 +130,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/update/5/",
+					"raw": "{{base_url}}/update/7/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"update",
-						"5",
+						"7",
 						""
 					]
 				},
@@ -174,13 +174,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/delete/5/",
+					"raw": "{{base_url}}/delete/7/",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"delete",
-						"5",
+						"7",
 						""
 					]
 				},

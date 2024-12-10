@@ -61,7 +61,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t    \"roll_number\": 136, \n        \"subject_name\": \"Physics\", \n        \"marks\": 90\n}",
+					"raw": "{\n\t    \"roll_number\": 136, \n        \"subject_name\": \"Maths\", \n        \"marks\": 90\n}",
 					"options": {
 						"raw": {
 							"language": "json"
