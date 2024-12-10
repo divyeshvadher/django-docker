@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import *
+from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed        
         
 class SubjectSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
@@ -21,11 +23,12 @@ class MarksSerializer(serializers.ModelSerializer):
         fields = ['id', 'student_name', 'subject_name', 'marks']
         
 class StudentSerializer(serializers.ModelSerializer):
-    flat_subjects = serializers.SerializerMethodField()
-
     class Meta:
         model = Student
-        fields = ['name', 'age', 'roll', 'flat_subjects']
+        fields = ['id', 'name', 'age', 'roll', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
 
     def get_flat_subjects(self, obj):
         marks = Marks.objects.filter(student=obj)
@@ -33,3 +36,27 @@ class StudentSerializer(serializers.ModelSerializer):
         for mark in marks:
             flat_data[mark.subject.subject] = mark.marks
         return flat_data
+    
+class StudentLoginSerializer(serializers.Serializer):
+    roll = serializers.IntegerField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        roll = attrs.get('roll')
+        password = attrs.get('password')
+
+        if not roll or not password:
+            raise AuthenticationFailed('Roll number and password are required.')
+
+        # Check if the student exists
+        try:
+            student = Student.objects.get(roll=roll)  # Make sure you're querying the Student model, not User
+        except Student.DoesNotExist:
+            raise AuthenticationFailed('Student not found.')
+
+        # Check password
+        if not student.check_password(password):  # Make sure you're using the check_password method from the Student model
+            raise AuthenticationFailed('Invalid credentials.')
+
+        attrs['student'] = student
+        return attrs

@@ -3,11 +3,45 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import *
 from .serializers import *
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.hashers import check_password
+from rest_framework_simplejwt.views import TokenRefreshView
 
 # Create your views here.
 
-# get all students
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        # Log or handle the refresh token usage
+        print(f"Token refreshed for user: {request.user}")
+        return response
+
+def get_tokens_for_user(student):
+    refresh = RefreshToken.for_user(student)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+@api_view(['POST'])
+def login(request):
+    roll = request.data.get('roll')
+    password = request.data.get('password')
+
+    if not roll or not password:
+        return Response({'error': 'Roll number and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        student = Student.objects.get(roll=roll)
+
+        if check_password(password, student.password):
+            tokens = get_tokens_for_user(student)
+            return Response(tokens, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+    except Student.DoesNotExist:
+        return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
 @api_view(['GET'])
 def get_students(request):
     students = Student.objects.all()

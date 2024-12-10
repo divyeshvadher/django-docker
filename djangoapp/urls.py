@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import CustomTokenRefreshView
 
 urlpatterns = [
     path('', views.get_students),
@@ -19,4 +20,7 @@ urlpatterns = [
     path('add-mark/', views.add_mark),
     path('update-mark/<str:pk>/', views.update_mark),
     path('delete-mark/<str:pk>/', views.delete_mark),
+    
+    path('login/', views.login),
+    path('refresh/', CustomTokenRefreshView.as_view()),
 ]

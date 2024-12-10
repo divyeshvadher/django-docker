@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'djangoapp',
     'rest_framework',
+    'rest_framework_simplejwt',
     
 ]
 
@@ -107,6 +109,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,  # Automatically issue new refresh tokens on use
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
+    'ALGORITHM': 'HS256',  # Algorithm for signing tokens
+    'SIGNING_KEY': SECRET_KEY,  # Key for signing the token
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
