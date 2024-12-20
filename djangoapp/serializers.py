@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import *
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed        
-        
+    
 class SubjectSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
 

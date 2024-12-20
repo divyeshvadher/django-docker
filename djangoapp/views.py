@@ -3,11 +3,49 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import *
 from .serializers import *
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import TokenError
+from jwt.exceptions import ExpiredSignatureError
 
 # Create your views here.
+
+@api_view(['POST'])
+def validate_access_token(request):
+    access_token = request.data.get('access')
+
+    if not access_token:
+        return Response({"error": "Access token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Try to decode the access token and validate it
+        payload = AccessToken(access_token)
+
+        # If the access token is valid and not expired, respond it's valid
+        return Response({"message": "Access token is valid and not expired."}, status=status.HTTP_200_OK)
+
+    except ExpiredSignatureError:
+        # If the token is expired, generate a new access token
+        try:
+            # Decode the token to get the user_id (or any unique identifier in the payload)
+            payload = AccessToken(access_token)
+            student_id = payload['user_id']
+            student = Student.objects.get(id=student_id)
+
+            # Generate a new access token for the user
+            new_access_token = get_access_token_for_user(student)
+
+            return Response({
+                'message': 'Access token expired, new access token generated.',
+                'access': new_access_token
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    except TokenError:
+        return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
@@ -15,13 +53,15 @@ class CustomTokenRefreshView(TokenRefreshView):
         # Log or handle the refresh token usage
         print(f"Token refreshed for user: {request.user}")
         return response
-
-def get_tokens_for_user(student):
+# Function to generate access token
+def get_access_token_for_user(student):
     refresh = RefreshToken.for_user(student)
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
+
+    # Add the student's name and roll to the token's payload
+    refresh.payload['name'] = student.name
+    refresh.payload['roll'] = student.roll
+
+    return str(refresh)
 
 @api_view(['POST'])
 def login(request):
@@ -35,12 +75,14 @@ def login(request):
         student = Student.objects.get(roll=roll)
 
         if check_password(password, student.password):
-            tokens = get_tokens_for_user(student)
-            return Response(tokens, status=status.HTTP_200_OK)
+            access_token = get_access_token_for_user(student)
+            return Response({'access': access_token}, status=status.HTTP_200_OK)  # Only access token
         else:
             return Response({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
     except Student.DoesNotExist:
         return Response({'error': 'Student not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
     
 @api_view(['GET'])
 def get_students(request):

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CustomTokenRefreshView
+from .views import validate_access_token
 
 urlpatterns = [
     path('', views.get_students),
@@ -22,5 +22,5 @@ urlpatterns = [
     path('delete-mark/<str:pk>/', views.delete_mark),
     
     path('login/', views.login),
-    path('refresh/', CustomTokenRefreshView.as_view()),
+    path('validate-access-token/', validate_access_token),
 ]
