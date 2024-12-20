@@ -49,14 +49,12 @@ def get_students(request):
     # Build a response including subjects and marks for each student
     data = []
     for student in students:
-        # Fetch all subjects and marks related to the student
+        # Fetch all subjects and their associated marks for the student
         subjects_data = []
         for subject in student.subjects.all():
-            # Fetch marks for the subject
-            try:
-                marks = Marks.objects.get(student=student, subject=subject).marks
-            except Marks.DoesNotExist:
-                marks = 0  # Default to 0 if marks do not exist
+            # Fetch marks using the relationship
+            marks_obj = subject.marks.filter(student=student).first()
+            marks = marks_obj.marks if marks_obj else 0  # Default to 0 if no marks found
 
             # Append subject and marks
             subjects_data.append({subject.subject: marks})
@@ -72,6 +70,7 @@ def get_students(request):
         data.append(student_data)
 
     return Response(data, status=200)
+
 
 
 # get single student
@@ -90,12 +89,11 @@ def get_student(request, pk):
             "subjects": []  # List to store subject and marks
         }
 
-        # Fetch all subjects and their marks for the student
+        # Fetch all subjects and their associated marks for the student
         for subject in student.subjects.all():
-            try:
-                marks = Marks.objects.get(student=student, subject=subject).marks
-            except Marks.DoesNotExist:
-                marks = 0  # Default to 0 if marks are not available
+            # Fetch marks using the reverse relationship
+            marks_obj = subject.marks.filter(student=student).first()
+            marks = marks_obj.marks if marks_obj else 0  # Default to 0 if no marks found
 
             # Append subject and marks to the subjects list
             data["subjects"].append({subject.subject: marks})
@@ -106,6 +104,7 @@ def get_student(request, pk):
         return Response({'error': 'Student not found.'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
 
 # add student
 @api_view(['POST'])
