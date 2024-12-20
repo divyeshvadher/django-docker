@@ -49,11 +49,9 @@ def get_students(request):
     # Build a response including subjects and marks for each student
     data = []
     for student in students:
-        # Fetch all subjects related to the student
-        subjects = Subject.objects.filter(student=student)
+        # Fetch all subjects and marks related to the student
         subjects_data = []
-
-        for subject in subjects:
+        for subject in student.subjects.all():
             # Fetch marks for the subject
             try:
                 marks = Marks.objects.get(student=student, subject=subject).marks
@@ -80,18 +78,30 @@ def get_students(request):
 @api_view(['GET'])
 def get_student(request, pk):
     try:
+        # Fetch the student by primary key
         student = Student.objects.get(id=pk)
-        marks = Marks.objects.filter(student=student)
+
+        # Initialize student data
         data = {
             "id": student.id,
             "name": student.name,
             "age": student.age,
-            "roll": student.roll
+            "roll": student.roll,
+            "subjects": []  # List to store subject and marks
         }
-        for mark in marks:
-            data[mark.subject.subject] = mark.marks
+
+        # Fetch all subjects and their marks for the student
+        for subject in student.subjects.all():
+            try:
+                marks = Marks.objects.get(student=student, subject=subject).marks
+            except Marks.DoesNotExist:
+                marks = 0  # Default to 0 if marks are not available
+
+            # Append subject and marks to the subjects list
+            data["subjects"].append({subject.subject: marks})
 
         return Response(data, status=200)
+
     except Student.DoesNotExist:
         return Response({'error': 'Student not found.'}, status=404)
     except Exception as e:
