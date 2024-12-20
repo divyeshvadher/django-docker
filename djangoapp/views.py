@@ -47,12 +47,6 @@ def validate_access_token(request):
     except TokenError:
         return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
 
-class CustomTokenRefreshView(TokenRefreshView):
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        # Log or handle the refresh token usage
-        print(f"Token refreshed for user: {request.user}")
-        return response
 # Function to generate access token
 def get_access_token_for_user(student):
     refresh = RefreshToken.for_user(student)
